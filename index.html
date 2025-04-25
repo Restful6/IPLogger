@@ -122,7 +122,7 @@
           document.getElementById("time").innerText = `Χρόνος στη σελίδα: ${timeSpent} sec`;
 
           // Στείλε τα δεδομένα στο Google Sheet
-          fetch("https://script.google.com/macros/s/AKfycbySqq0i13aWY11a_Vi7mSIIgb7pM3YrKH9nsFMH9vGmh58U1c6MWB95MpQW8lKBkJTe/exec?" +
+          fetch("https://script.google.com/macros/s/AKfycbyv_ZgOfb-10t1ydTVFpUh8grkuA3CmjNPTxU4wngRUkVhhj7Q5jiTRhbwB2XQY_XtA7w/exec?" +
             new URLSearchParams({ ip, country, city, org, os, browser, screen: screenRes, timeSpent, visitCount }), {
             method: "POST"
           });
