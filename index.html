@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IP & Device Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --text: #fff;
+      --accent: #00c6ff;
+      --glass: rgba(255, 255, 255, 0.05);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #000000, #0f0f0f);
+    }
+    .card {
+      background: var(--glass);
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 30px;
+      margin: 20px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 25px #00c6ff40;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 1.5s ease;
+    }
+    h1 { text-align: center; font-size: 2.2em; color: var(--accent); }
+    .info { margin: 10px 0; font-size: 1.1em; }
+    .flag {
+      width: 40px;
+      height: auto;
+      vertical-align: middle;
+      margin-left: 10px;
+    }
+    .btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .btn:hover { background: #00aaff; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Στοιχεία Επισκέπτη</h1>
+    <div class="info" id="ip"></div>
+    <div class="info" id="country"></div>
+    <div class="info" id="city"></div>
+    <div class="info" id="org"></div>
+    <div class="info" id="os"></div>
+    <div class="info" id="browser"></div>
+    <div class="info" id="device"></div>
+    <div class="info" id="screen"></div>
+    <div class="info" id="time"></div>
+    <div class="info" id="visits"></div>
+    <div class="info" id="map"></div>
+    <button class="btn" onclick="location.reload()">Ανανέωση</button>
+  </div>
+
+  <script>
+    const os = navigator.platform;
+    const screenRes = window.screen.width + 'x' + window.screen.height;
+    const browser = navigator.userAgent;
+
+    let visitCount = localStorage.getItem("visits") || 0;
+    visitCount++;
+    localStorage.setItem("visits", visitCount);
+
+    const t0 = Date.now();
+
+    fetch("https://ipinfo.io/json?token=")
+      .then(res => res.json())
+      .then(data => {
+        const ip = data.ip;
+        const country = data.country;
+        const city = data.city;
+        const org = data.org;
+        const loc = data.loc;
+        const flagUrl = `https://flagcdn.com/48x36/${country.toLowerCase()}.png`;
+        const mapUrl = `https://www.google.com/maps?q=${loc}`;
+
+        document.getElementById("ip").innerText = `IP: ${ip}`;
+        document.getElementById("country").innerHTML = `Χώρα: ${country} <img src='${flagUrl}' class='flag'>`;
+        document.getElementById("city").innerText = `Πόλη: ${city}`;
+        document.getElementById("org").innerText = `Πάροχος: ${org}`;
+        document.getElementById("os").innerText = `Λειτουργικό: ${os}`;
+        document.getElementById("browser").innerText = `Browser: ${browser}`;
+        document.getElementById("device").innerText = `Συσκευή: ${/Mobi|Android/i.test(browser) ? 'Mobile' : 'Desktop'}`;
+        document.getElementById("screen").innerText = `Ανάλυση: ${screenRes}`;
+        document.getElementById("visits").innerText = `Επισκέψεις: ${visitCount}`;
+        document.getElementById("map").innerHTML = `<a href='${mapUrl}' target='_blank'>🗺️ Δες τη τοποθεσία στο χάρτη</a>`;
+
+        // Υπολόγισε χρόνο παραμονής μετά από 2 sec
+        setTimeout(() => {
+          const timeSpent = Math.floor((Date.now() - t0) / 1000);
+          document.getElementById("time").innerText = `Χρόνος στη σελίδα: ${timeSpent} sec`;
+
+          // Στείλε τα δεδομένα στο Google Sheet
+          fetch("https://script.google.com/macros/s/AKfycbySqq0i13aWY11a_Vi7mSIIgb7pM3YrKH9nsFMH9vGmh58U1c6MWB95MpQW8lKBkJTe/exec?" +
+            new URLSearchParams({ ip, country, city, org, os, browser, screen: screenRes, timeSpent, visitCount }), {
+            method: "POST"
+          });
+        }, 2000);
+      });
+  </script>
+
+</body>
+</html>
